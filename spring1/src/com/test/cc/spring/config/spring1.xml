@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	
+	xmlns:context="http://www.springframework.org/schema/context"	
+	xmlns:aop="http://www.springframework.org/schema/aop"		
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-4.0.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+	">
+	<bean id="springtest" class="com.test.cc.spring.SpringTest1"/>
+	<bean id="testaspect" class="com.test.cc.spring.TestAspect"/>
+	<aop:config>
+		<aop:aspect id="testAspectAop" ref="testaspect">
+			<aop:pointcut expression="execution(* com.test.cc.spring.*.*(..))" id="testaspectcut"/>
+			<aop:before method="doBefore" pointcut-ref="testaspectcut"/>
+			<aop:after method="doAfter" pointcut-ref="testaspectcut"/>
+		</aop:aspect>
+	
+	</aop:config>
+	
+</beans>

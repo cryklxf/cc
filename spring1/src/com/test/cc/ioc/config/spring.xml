@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	
+	xmlns:context="http://www.springframework.org/schema/context"	
+	xmlns:aop="http://www.springframework.org/schema/aop"		
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-4.0.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+	">
+	<bean id="student" class="com.test.cc.factory.StudentFactory" factory-method="createStudent"></bean>
+	<bean id="springtest" class="com.test.cc.ioc.SpringTest">
+		<property name="desc" value="这是一个美丽的故事"></property>
+		<property name="student" ref="student"/>
+		
+		<property name="list">
+			<list>
+				<bean id="student" class="com.test.cc.ioc.Student">
+					<property name="name" value="张三"></property>
+					<property name="sex" value="男"></property>
+					<property name="age" value="15"></property>
+				</bean>
+				<bean id="student" class="com.test.cc.ioc.Student">
+					<property name="name" value="张琴"></property>
+					<property name="sex" value="女"></property>
+					<property name="age" value="16"></property>
+				</bean>
+				<ref bean="student"/>
+			</list>
+		</property>
+				<property name="stmap">
+			<map>
+				<entry>
+				<key><value>钥匙1</value></key>
+				<value>宝藏1</value>
+				</entry>
+				
+				<entry>
+				<key><value>钥匙2</value></key>
+				<value>宝藏2</value>
+				</entry>
+			</map>
+		</property>
+	</bean>
+	
+</beans>
