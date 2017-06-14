@@ -1,0 +1,262 @@
+ * springMVC框架 
+ * 		取代servlet，代替contoller层
+ * 		springMvc通过拦截serlvet请求，实现代替servlet
+ 
+	springmvc配置
+		1.web.xml配置拦截器
+			<servlet>
+				<servlet-name>springMVC</servlet-name>
+				<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+				 <!-- 配置初始化读取spring-mvc.xml文件 -->
+				<init-param>
+					<param-name>contextConfigLocation</param-name>
+					<param-value>classpath:spring-mvc.xml</param-value>
+				</init-param>
+		  </servlet>
+		  <servlet-mapping>
+			<servlet-name>springMVC</servlet-name>
+			<url-pattern>*.do</url-pattern>
+		  </servlet-mapping>
+		  
+		 2.配置 spring-mvc.xml文件
+			方式一：
+				<!-- 单个controller配置，一个请求对应一个类 -->
+				<bean name="/springMvc.htm" class="com.chinasoft.controller.servlet.SpringMvc"/>
+				<bean name="/springMvc2.htm" class="com.chinasoft.controller.servlet.SpringMvc2"/>
+			方式二：
+				<!-- 多方法参数解析器 -->
+				<bean id="mutiResolver" class="org.springframework.web.servlet.mvc.multiaction.ParameterMethodNameResolver">
+					<property name="paramName" value="method" />
+				</bean>
+				<bean name="/springMvc3.htm" class="com.chinasoft.controller.servlet.SpringMvc3">
+					<!-- 指明采用哪一个方法解析器 -->
+					<property name="methodNameResolver" ref="mutiResolver"/>
+				</bean>
+			方式三（推荐）：
+				<!--开启注解： 扫描控制层包，使其认为是control层 -->
+				<!-- <context:annotation-config /> -->
+				<context:component-scan base-package="com.chinasoft.controller"/>
+				
+				<!-- <mvc:annotation-driven /> 会自动注册DefaultAnnotationHandlerMapping与AnnotationMethodHandlerAdapter   
+				两个bean,是spring MVC为@Controllers分发请求所必须的。 
+					相当于开启多方法访问-->  
+				<mvc:annotation-driven />
+				<!-- 视图解析器 -->
+				<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+					<!-- 前缀 -->
+					<property name="prefix" value="/"></property>
+					<!-- 后缀 -->
+					<property name="suffix" value=".jsp"></property>
+				</bean>
+				
+				
+	spring注解
+		@Controller 什么该类时一个控制器
+			@Controller("控制器名字") 
+			RequestMapping("地址") 请求地址的目录路径
+			
+		@RequestMapping("地址") 浏览器访问映射地址注解
+			等效于@RequestMapping(value="地址")
+			method=RequestMethod.POST(POST,GET,PUT,DELETE,UPDATE等) 表示请求时只能以该方式请求
+		
+		@responseBody 表示不返回页面，而是返回一个json字符串或者对象
+		
+		@requestParam 参数注解
+			required=true true/false 表示该参数是否是请求时必须要传递的参数
+			name="name属性的值"  表示请求参数的表单name属性的值
+			
+	
+	spring获取值
+		1.和servlet处理方式一样
+		2.springMVC请求特有的处理方式
+			方式一：
+				@RequestMapping("/query")
+				public void query(HttpServletRequest req,HttpServletResponse resp){
+					
+				}
+			方式二：
+				@RequestMapping(value="/login",method=RequestMethod.POST)
+				public void login(String name,@RequestParam(name="pwd") String password,@RequestParam(required=false) String checkcode){
+					System.out.println("login");
+					System.out.println(name+"  "+password+"  "+checkcode);
+				}
+			方式三：
+				@RequestMapping(value="/login1",method=RequestMethod.POST)
+				public void login1(Login login){
+					System.out.println("login1");
+					System.out.println(login.getId()+" "+login.getName()+"  "+login.getPwd()+"  "+login.getCheckcode());
+					
+					//执行service	
+				}
+		3.springMVC返回方式
+			方式一：
+				@RequestMapping(value="/login2",method=RequestMethod.POST)
+				public void login2(Login login,HttpServletResponse resp) throws IOException{
+					System.out.println("login2");
+					System.out.println(login.getId()+" "+login.getName()+"  "+login.getPwd()+"  "+login.getCheckcode());
+					
+					//执行service	
+					resp.setContentType("text/html;charset=utf-8");
+					resp.getWriter().println("{\"code\":1,\"result\":\"登录成功\"}");
+				}
+			方式二（依赖jackjson架包）：
+				@RequestMapping(value="/login3",method=RequestMethod.POST)
+				@ResponseBody
+				public  List<Login> login3(Login login){
+					System.out.println(login.getId()+" "+login.getName()+"  "+login.getPwd()+"  "+login.getCheckcode());
+					
+					List<Login> list=new ArrayList<Login>();
+					for (int i = 0; i < 4; i++) {
+						Login lo=new Login();
+						lo.setId(i);
+						lo.setName("name"+i);
+						list.add(lo);
+					}
+					
+					return list;
+				}
+			
+			方式三（依赖jackjson架包或者其他json架包，如json.lib.jar ,gson.jar,fastjson.jar等）：
+				@RequestMapping(value="/login4",method=RequestMethod.POST)
+				@ResponseBody
+				public  String login4(Login login) throws JsonProcessingException{
+					System.out.println(login.getId()+" "+login.getName()+"  "+login.getPwd()+"  "+login.getCheckcode());
+					
+					List<Login> list=new ArrayList<Login>();
+					for (int i = 0; i < 4; i++) {
+						Login lo=new Login();
+						lo.setId(i);
+						lo.setName("name"+i);
+						list.add(lo);
+					}
+			//		ObjectMapper mapper=new  ObjectMapper();
+			//		Map map = new HashMap();
+			//		map.put("list", list);		
+			//		String json0=mapper.writeValueAsString(map);
+			//		System.out.println(json0);
+					
+					JSONObject obj=new JSONObject();
+					obj.put("list", list);
+					String json=obj.toString();
+					System.out.println(json);
+					return json;
+				}
+					
+		
+	文件上传配置
+		<!-- 文件上传解析器 -->
+		<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+			<property name="defaultEncoding" value="utf-8"/>
+			<property name="maxUploadSize" value="1048576000" />
+			<property name="maxInMemorySize" value="40960"/>
+		</bean>
+		
+		控制层方法
+		@RequestMapping("/uploadFile")
+		public void uploadFile(@RequestParam(required=false) CommonsMultipartFile file,HttpServletRequest req ,String name) throws IOException{
+				String fileName=file.getOriginalFilename();
+				
+				File dirPath=new File(req.getServletContext().getRealPath("/")+
+								"/upload/");
+				if(!dirPath.exists())
+					dirPath.mkdir();
+				
+				File filePath=new File(dirPath, fileName);
+				if(!filePath.exists())
+					filePath.createNewFile();
+				//保存文件
+				file.transferTo(filePath);
+				
+		//		System.out.println(dirPath.getPath());
+		//		FileOutputStream fos=new FileOutputStream(dirPath.getPath()+"/"+fileName);
+		//		InputStream in=file.getInputStream();
+		//		int temp=0;
+		//		while((temp=in.read())!=-1){
+		//			fos.write(temp);
+		//		}
+		//		fos.close();
+				//
+			
+		}
+		
+		
+	文件下载：
+		@RequestMapping("/downLoad")
+		public void downLoad(String filePath,HttpServletRequest req , HttpServletResponse response, boolean isOnLine) throws Exception {
+			File f = new File(req.getServletContext().getRealPath("/")+filePath);
+			if (!f.exists()) {
+			  response.sendError(404, "File not found!");
+			  return;
+			}
+			BufferedInputStream br = new BufferedInputStream(new FileInputStream(f));
+			byte[] buf = new byte[1024];
+			int len = 0;
+		 
+			response.reset(); // 非常重要
+			if (isOnLine) { // 在线打开方式
+			  URL u = new URL("file:///" + filePath);
+			  response.setContentType(u.openConnection().getContentType());
+			  response.setHeader("Content-Disposition", "inline; filename=" + f.getName());
+			  // 文件名应该编码成UTF-8
+			} else { // 纯下载方式
+			  response.setContentType("application/x-msdownload");
+			  response.setHeader("Content-Disposition", "attachment; filename=" + f.getName());
+			}
+			OutputStream out = response.getOutputStream();
+			while ((len = br.read(buf)) > 0)
+			  out.write(buf, 0, len);
+			br.close();
+			out.close();
+		  }
+			
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
